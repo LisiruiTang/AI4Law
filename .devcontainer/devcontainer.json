@@ -1,0 +1,13 @@
+{
+  "name": "AI4Law Simulator Preview",
+  "image": "mcr.microsoft.com/devcontainers/python:1-3.12-bullseye",
+  "postCreateCommand": "python -m pip install -r requirements.txt",
+  "postStartCommand": "bash .devcontainer/start-preview.sh",
+  "forwardPorts": [8000],
+  "portsAttributes": {
+    "8000": {
+      "label": "AI4Law Simulator",
+      "onAutoForward": "notify"
+    }
+  }
+}
