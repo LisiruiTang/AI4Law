@@ -18,6 +18,24 @@ The page can load without a key, but model requests need `OPENAI_API_KEY` or `OP
 
 Do not paste the key into source files, this README, or a chat message.
 
+## Configure the model API key
+
+The Simulator page opens without an API key, but model requests need either `OPENAI_API_KEY` or `OPENROUTER_API_KEY` in the backend environment. Token-probability probes require token log-probabilities; Anthropic models do not provide them for these measurements.
+
+The person who owns and runs the Codespace should add the key once. Students using that same running Simulator page do not need to enter a key or create their own Codespaces.
+
+1. Create an API key with your chosen provider (OpenAI or OpenRouter).
+2. Open [GitHub Codespaces secrets](https://github.com/settings/codespaces) while signed in to the GitHub account that owns the Codespace.
+3. Under **Secrets and variables → Codespaces**, choose **New secret** (or **New repository secret**).
+4. For **Name**, enter exactly `OPENAI_API_KEY` or `OPENROUTER_API_KEY`. For **Value**, paste your provider key.
+5. Set repository access to **Selected repositories**, select **LisiruiTang/AI4Law**, and save the secret.
+6. Stop the current Codespace, then start it again from **Code → Codespaces**. The key is injected when the Codespace starts; restarting only the backend process will not load a newly added secret.
+7. Open the forwarded **AI4Law Simulator** port (3000) and try the model request again.
+
+GitHub keeps this secret outside the repository. Never put the real key in source files, this README, a Codespaces terminal command, or a chat message. Provider API usage is billed separately from Codespaces. If each person creates a separate Codespace, each Codespace owner must configure a key available to that Codespace, and provider usage is billed to that key's account.
+
+See [GitHub's guide to managing Codespaces secrets](https://docs.github.com/en/codespaces/managing-your-codespaces/managing-your-account-specific-secrets-for-github-codespaces) for details.
+
 ## Run on your computer (optional)
 
 Install Python 3.11+ and Node.js 20+. From the repository root, install dependencies:
