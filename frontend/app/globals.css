@@ -1,7 +1,7 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-:root{--background:#0d1020;--surface:#181c2e;--surface-2:#232844;--border:#2c3158;--text:#e2e8f0;--text-muted:#8a9ab8;--ui-scale:1.25;color-scheme:dark}
+:root{--background:#0d1725;--surface:#17283d;--surface-2:#213850;--border:#365072;--text:#f0f4f7;--text-muted:#a5d3ed;--ui-scale:1.25;color-scheme:dark}
 html{font-size:calc(16px * var(--ui-scale));background:var(--background)}body{margin:0;background:var(--background);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
 .text-\[9px\]{font-size:0.5625rem}.text-\[10px\]{font-size:0.625rem}.text-\[11px\]{font-size:0.6875rem}
 .max-w-screen-xl{max-width:80rem}
