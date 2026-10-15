@@ -200,7 +200,7 @@ export function BeamPanel() {
           onChange={(e) => setPrompt(e.target.value)}
           rows={2}
           placeholder="Text for the model to continue…"
-          className="w-full resize-y rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-violet-500"
+          className="w-full resize-y rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-law-light"
         />
 
         <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Variation">
@@ -220,7 +220,7 @@ export function BeamPanel() {
               }}
               className={`rounded-lg border px-3 py-1.5 text-xs transition-colors ${
                 temperature === value
-                  ? "border-violet-500/40 bg-violet-500/15 text-violet-200"
+                  ? "border-law-light/40 bg-law-light/15 text-law-light"
                   : "border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-white"
               }`}
             >
@@ -257,7 +257,7 @@ export function BeamPanel() {
           <button
             onClick={() => void run()}
             disabled={running || !prompt.trim()}
-            className="px-4 py-2 text-xs rounded-lg bg-violet-500/20 border border-violet-500/40 text-violet-200 hover:bg-violet-500/30 disabled:opacity-40 transition-colors"
+            className="px-4 py-2 text-xs rounded-lg bg-law-light/20 border border-law-light/40 text-law-light hover:bg-law-light/30 disabled:opacity-40 transition-colors"
           >
             {running ? "Branching…" : "Grow the tree"}
           </button>
@@ -299,9 +299,9 @@ export function BeamPanel() {
             <span className="text-zinc-300">beam search</span>, drawn as a tree.
           </p>
           <p className="mb-2">
-            The <span className="text-amber-300">amber</span> path is greedy. The{" "}
-            <span className="text-teal-300">teal</span> path is the best-scoring chain.
-            Where they agree they run <span className="text-violet-300">violet</span>.
+            The <span className="text-law-gold">gold</span> path is greedy. The{" "}
+            <span className="text-law-bright">bright blue</span> path is the best-scoring chain.
+            Where they agree they run <span className="text-law-light">light blue</span>.
           </p>
           <p className="mb-2">
             Chains are scored <span className="text-zinc-300">per token</span> — the
@@ -339,7 +339,7 @@ export function BeamPanel() {
           <div
             className={`rounded-xl border px-4 py-3 max-w-4xl ${
               result.relation === "diverged"
-                ? "border-teal-500/40 bg-teal-500/5"
+                ? "border-law-bright/40 bg-law-bright/5"
                 : "border-zinc-800 bg-zinc-900/40"
             }`}
           >
@@ -351,7 +351,7 @@ export function BeamPanel() {
                 </div>
                 <p className="text-xs text-[var(--text-muted)] leading-relaxed mb-3">
                   The sentence the search found is{" "}
-                  <span className="text-teal-300 font-semibold">
+                  <span className="text-law-bright font-semibold">
                     {result.advantage.toFixed(2)}×
                   </span>{" "}
                   likelier per token. It took a lower-probability word at step{" "}
@@ -368,7 +368,7 @@ export function BeamPanel() {
                 </div>
                 <p className="text-xs text-[var(--text-muted)] leading-relaxed mb-3">
                   The two never fork; the shorter one simply scores{" "}
-                  <span className="text-teal-300 font-semibold">
+                  <span className="text-law-bright font-semibold">
                     {result.advantage.toFixed(2)}×
                   </span>{" "}
                   better per token by stopping while the going is good. Every further token
@@ -396,7 +396,7 @@ export function BeamPanel() {
               </>
             )}
             {result.min_length_binding && (
-              <p className="text-xs text-amber-300/90 leading-relaxed mb-3">
+              <p className="text-xs text-law-gold/90 leading-relaxed mb-3">
                 A shorter chain scored better and was not eligible —{" "}
                 <span className="text-zinc-300">Shortest chain</span> is set to{" "}
                 {result.min_length}. Drop it to see what it excluded.
@@ -405,14 +405,14 @@ export function BeamPanel() {
             <div className="space-y-1.5 font-mono text-xs">
               <ChainRow
                 label="greedy"
-                color="text-amber-300"
+                color="text-law-gold"
                 text={result.greedy.text}
                 cum={result.greedy.cum_prob}
                 avg={result.greedy.avg_prob}
               />
               <ChainRow
                 label="likeliest"
-                color="text-teal-300"
+                color="text-law-bright"
                 text={result.best.text}
                 cum={result.best.cum_prob}
                 avg={result.best.avg_prob}
@@ -440,7 +440,7 @@ export function BeamPanel() {
                 setPlaying(false);
                 setMaxStep(Number(e.target.value));
               }}
-              className="flex-1 min-w-40 max-w-md accent-violet-500"
+              className="flex-1 min-w-40 max-w-md accent-law-light"
             />
             <span className="text-[11px] text-[var(--text-muted)] tabular-nums">
               step {maxStep} / {result.depth}
@@ -544,7 +544,7 @@ function ProvenanceNote() {
                 href="https://arxiv.org/abs/1904.09751"
                 target="_blank"
                 rel="noreferrer"
-                className="text-violet-400 hover:text-violet-300 underline underline-offset-2"
+                className="text-law-light hover:text-law-light underline underline-offset-2"
               >
                 arXiv:1904.09751
               </a>
@@ -556,7 +556,7 @@ function ProvenanceNote() {
                 href="https://arxiv.org/abs/2203.11171"
                 target="_blank"
                 rel="noreferrer"
-                className="text-violet-400 hover:text-violet-300 underline underline-offset-2"
+                className="text-law-light hover:text-law-light underline underline-offset-2"
               >
                 arXiv:2203.11171
               </a>
@@ -567,7 +567,7 @@ function ProvenanceNote() {
                 href="https://arxiv.org/abs/2305.10601"
                 target="_blank"
                 rel="noreferrer"
-                className="text-violet-400 hover:text-violet-300 underline underline-offset-2"
+                className="text-law-light hover:text-law-light underline underline-offset-2"
               >
                 arXiv:2305.10601
               </a>
@@ -578,7 +578,7 @@ function ProvenanceNote() {
                 href="https://arxiv.org/abs/2308.11462"
                 target="_blank"
                 rel="noreferrer"
-                className="text-violet-400 hover:text-violet-300 underline underline-offset-2"
+                className="text-law-light hover:text-law-light underline underline-offset-2"
               >
                 arXiv:2308.11462
               </a>{" "}
@@ -650,7 +650,7 @@ function Slider({
         max={max}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="w-28 accent-violet-500"
+        className="w-28 accent-law-light"
       />
     </label>
   );

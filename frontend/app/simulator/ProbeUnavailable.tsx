@@ -20,12 +20,12 @@ export function ProbeUnavailable({ status }: { status: ProbeAvailability }) {
   const headline = HEADLINES[status.problem] ?? "Probes are unavailable";
 
   return (
-    <div className="max-w-3xl rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
+    <div className="max-w-3xl rounded-xl border border-law-gold/30 bg-law-gold/10 px-4 py-3 text-sm text-law-gold">
       <p className="font-semibold mb-1.5">{headline}</p>
-      <p className="text-xs leading-relaxed text-amber-200/85">{status.reason}</p>
+      <p className="text-xs leading-relaxed text-law-gold/85">{status.reason}</p>
 
       {status.problem === "no_key" && (
-        <p className="text-xs leading-relaxed text-amber-200/70 mt-2">
+        <p className="text-xs leading-relaxed text-law-gold/70 mt-2">
           These probes need token log-probabilities. Add OPENAI_API_KEY or OPENROUTER_API_KEY
           to the backend environment, then restart the service. Anthropic does not return
           log-probabilities for these measurements.
@@ -33,8 +33,8 @@ export function ProbeUnavailable({ status }: { status: ProbeAvailability }) {
       )}
 
       {status.problem !== "no_key" && (
-        <p className="text-xs leading-relaxed text-amber-200/70 mt-2">
-          Tried <code className="text-amber-100">{status.endpoint}</code>. Opening that URL
+        <p className="text-xs leading-relaxed text-law-gold/70 mt-2">
+          Tried <code className="text-law-gold">{status.endpoint}</code>. Opening that URL
           directly will show whether the backend is up and whether it has the route.
         </p>
       )}

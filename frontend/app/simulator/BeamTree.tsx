@@ -24,7 +24,7 @@ function uiScale(): number {
 }
 
 const BASE_COL_W = 132;
-const BASE_ROW_H = 26;
+const BASE_ROW_H = 32;
 const BASE_PAD_X = 16;
 const BASE_PAD_Y = 18;
 
@@ -154,9 +154,9 @@ export function BeamTree({
     // Cumulative probability spans orders of magnitude; a log scale keeps late
     // branches visible instead of collapsing them all to hairlines.
     const w = 1 + Math.max(0, (12 + n.cum_logprob) / 12) * 4;
-    if (onBest && onGreedy) return { stroke: "#a78bfa", width: w, dash: "", opacity: 0.95 };
-    if (onBest) return { stroke: "#2dd4bf", width: w, dash: "", opacity: 0.95 };
-    if (onGreedy) return { stroke: "#fbbf24", width: w, dash: "", opacity: 0.9 };
+    if (onBest && onGreedy) return { stroke: "#a5d3ed", width: w, dash: "", opacity: 0.95 };
+    if (onBest) return { stroke: "#00adef", width: w, dash: "", opacity: 0.95 };
+    if (onGreedy) return { stroke: "#ffb837", width: w, dash: "", opacity: 0.9 };
     return { stroke: "#52525b", width: w * 0.6, dash: "", opacity: 0.65 };
   };
 
@@ -199,22 +199,28 @@ export function BeamTree({
         {placed.map((n) => {
           if (n.step === 0) {
             return (
-              <circle key={n.id} cx={n.x} cy={n.y} r={4 * scale} fill="#a78bfa" />
+              <circle key={n.id} cx={n.x} cy={n.y} r={4 * scale} fill="#a5d3ed" />
             );
           }
           const onBest = bestIds.has(n.id);
           const onGreedy = greedyIds.has(n.id);
           const color = n.pruned
-            ? "#52525b"
+            ? "#a1a1aa"
             : onBest && onGreedy
-              ? "#c4b5fd"
+              ? "#a5d3ed"
               : onBest
-                ? "#5eead4"
+                ? "#00adef"
                 : onGreedy
-                  ? "#fcd34d"
-                  : "#a1a1aa";
+                  ? "#ffb837"
+                  : "#d4d4d8";
+          const label = renderToken(n.token);
+          const probability = pct(n.prob);
+          const labelWidth = Math.min(
+            COL_W - 8 * scale,
+            Math.max(label.length * 7.4 + 10, probability.length * 5.8 + 10) * scale
+          );
           return (
-            <g key={n.id} opacity={n.pruned ? 0.45 : 1}>
+            <g key={n.id}>
               <title>
                 {[
                   JSON.stringify(n.token),
@@ -236,18 +242,26 @@ export function BeamTree({
                   .filter(Boolean)
                   .join("\n")}
               </title>
+              <rect
+                x={n.x - 2 * scale}
+                y={n.y - 12 * scale}
+                width={labelWidth}
+                height={30 * scale}
+                rx={4 * scale}
+                fill="#09090b"
+              />
               <text
                 x={n.x}
                 y={n.y + 3 * scale}
                 fill={color}
-                fontSize={11 * scale}
+                fontSize={12 * scale}
                 fontFamily="ui-monospace, monospace"
                 fontWeight={onBest || onGreedy ? 600 : 400}
               >
-                {renderToken(n.token)}
+                {label}
               </text>
-              <text x={n.x} y={n.y + 13 * scale} fill="#52525b" fontSize={8 * scale}>
-                {pct(n.prob)}
+              <text x={n.x} y={n.y + 16 * scale} fill={n.pruned ? "#8a8a93" : "#a1a1aa"} fontSize={9 * scale}>
+                {probability}
               </text>
             </g>
           );

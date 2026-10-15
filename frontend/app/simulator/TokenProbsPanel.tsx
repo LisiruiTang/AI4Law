@@ -178,7 +178,7 @@ function Bars({
   deltas?: Record<string, number>;
   accent?: "teal" | "sky";
 }) {
-  const bar = accent === "teal" ? "bg-teal-400/70" : "bg-sky-400/70";
+  const bar = accent === "teal" ? "bg-law-bright/70" : "bg-law-gold/70";
   return (
     <div className="space-y-1.5">
       {Object.entries(distribution).map(([label, p]) => {
@@ -246,7 +246,7 @@ function Verdict({
       ? { border: "border-zinc-800", chip: "text-[var(--text-muted)]" }
       : asExpected
         ? { border: "border-emerald-500/30", chip: "text-emerald-300" }
-        : { border: "border-amber-500/40", chip: "text-amber-300" };
+        : { border: "border-law-gold/40", chip: "text-law-gold" };
 
   let headline: string;
   let body: string;
@@ -510,7 +510,7 @@ export function TokenProbsPanel() {
                 shows where the probability moved. Two of them state in advance what
                 should happen, because something outside this page settles it — one
                 where the change was meant to alter the answer, and one{" "}
-                <span className="text-sky-300">control</span> where it was meant not
+                <span className="text-law-gold">control</span> where it was meant not
                 to. Read those two together: movement on its own cannot tell a model
                 that is reading the context from one that is merely reacting to the
                 words having changed.
@@ -525,9 +525,9 @@ export function TokenProbsPanel() {
                 for where it went, not as an effect size.
               </p>
               {applied?.expect && !unedited && (
-                <p className="mt-1.5 text-[10px] text-amber-300/80 leading-relaxed">
+                <p className="mt-1.5 text-[10px] text-law-gold/80 leading-relaxed">
                   You have edited{" "}
-                  <span className="text-amber-200">{applied.name}</span>, so its stated
+                  <span className="text-law-gold">{applied.name}</span>, so its stated
                   expectation no longer applies — the result will be reported as a
                   measurement without a pass or fail.
                 </p>
@@ -548,7 +548,7 @@ export function TokenProbsPanel() {
             onChange={(e) => setQuestion(e.target.value)}
             rows={3}
             placeholder="The case, the student answer, the passage — whatever the model must judge. This is the user turn."
-            className="mt-1 w-full resize-y rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-teal-500"
+            className="mt-1 w-full resize-y rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-law-bright"
           />
         </label>
 
@@ -561,7 +561,7 @@ export function TokenProbsPanel() {
             value={optionsRaw}
             onChange={(e) => setOptionsRaw(e.target.value)}
             placeholder="1, 2, 3, 4, 5"
-            className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs text-zinc-100 font-mono placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-teal-500"
+            className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs text-zinc-100 font-mono placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-law-bright"
           />
           <div className="mt-1.5 space-y-1 text-[10px] text-[var(--text-muted)] leading-relaxed">
             <p>
@@ -605,7 +605,7 @@ export function TokenProbsPanel() {
                   key={id}
                   className={`flex gap-2 items-start cursor-pointer rounded-lg px-2 py-1.5 border transition-colors ${
                     mode === id
-                      ? "border-teal-500/40 bg-teal-500/10"
+                      ? "border-law-bright/40 bg-law-bright/10"
                       : "border-transparent hover:bg-white/5"
                   }`}
                 >
@@ -614,10 +614,10 @@ export function TokenProbsPanel() {
                     name="cmp-mode"
                     checked={mode === id}
                     onChange={() => setMode(id)}
-                    className="accent-teal-500 mt-0.5"
+                    className="accent-law-bright mt-0.5"
                   />
                   <span>
-                    <span className={`block text-xs ${mode === id ? "text-teal-200" : "text-zinc-300"}`}>
+                    <span className={`block text-xs ${mode === id ? "text-law-light" : "text-zinc-300"}`}>
                       {label}
                     </span>
                     <span className="block text-[10px] text-[var(--text-muted)] leading-relaxed">
@@ -639,7 +639,7 @@ export function TokenProbsPanel() {
           {mode !== "single" && (
             <div>
               <div className="flex items-baseline justify-between gap-2 mb-1">
-                <span className="text-[10px] uppercase tracking-wider text-teal-400">
+                <span className="text-[10px] uppercase tracking-wider text-law-bright">
                   {mode === "models" ? "Context — used by both models (optional)" : labelA}
                 </span>
                 {mode !== "models" && (
@@ -647,7 +647,7 @@ export function TokenProbsPanel() {
                     value={labelA}
                     onChange={(e) => { setLabelA(e.target.value); setLabelsAreMine(true); }}
                     placeholder="name this arm"
-                    className="w-28 rounded border border-zinc-800 bg-zinc-900 px-1.5 py-0.5 text-[10px] text-zinc-400 placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                    className="w-28 rounded border border-zinc-800 bg-zinc-900 px-1.5 py-0.5 text-[10px] text-zinc-400 placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-law-bright"
                   />
                 )}
               </div>
@@ -662,7 +662,7 @@ export function TokenProbsPanel() {
                       ? "The first of the two contexts…"
                       : "Held constant across both models. Leave empty to compare them with no context at all."
                 }
-                className="w-full resize-y rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                className="w-full resize-y rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-law-bright"
               />
             </div>
           )}
@@ -689,14 +689,14 @@ export function TokenProbsPanel() {
           {mode === "versions" && (
             <div>
               <div className="flex items-baseline justify-between gap-2 mb-1">
-                <span className="text-[10px] uppercase tracking-wider text-sky-400">
+                <span className="text-[10px] uppercase tracking-wider text-law-gold">
                   {labelB}
                 </span>
                 <input
                   value={labelB}
                   onChange={(e) => { setLabelB(e.target.value); setLabelsAreMine(true); }}
                   placeholder="name this arm"
-                  className="w-28 rounded border border-zinc-800 bg-zinc-900 px-1.5 py-0.5 text-[10px] text-zinc-400 placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-sky-500"
+                  className="w-28 rounded border border-zinc-800 bg-zinc-900 px-1.5 py-0.5 text-[10px] text-zinc-400 placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-law-gold"
                 />
               </div>
               <textarea
@@ -704,14 +704,14 @@ export function TokenProbsPanel() {
                 onChange={(e) => setContextB(e.target.value)}
                 rows={3}
                 placeholder="The other context, on identical input…"
-                className="w-full resize-y rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-sky-500"
+                className="w-full resize-y rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-law-gold"
               />
             </div>
           )}
 
           {mode === "models" && (
             <div>
-              <span className="block text-[10px] uppercase tracking-wider text-sky-400 mb-1">
+              <span className="block text-[10px] uppercase tracking-wider text-law-gold mb-1">
                 Second model
               </span>
               <select
@@ -724,7 +724,7 @@ export function TokenProbsPanel() {
                 ))}
               </select>
               {modelB === model && (
-                <p className="mt-1 text-[10px] text-amber-300/80">
+                <p className="mt-1 text-[10px] text-law-gold/80">
                   That is the same model as the one below — pick a different one, or
                   there is nothing to compare.
                 </p>
@@ -737,7 +737,7 @@ export function TokenProbsPanel() {
           <button
             onClick={run}
             disabled={running || options.length < 2 || !question.trim()}
-            className="px-4 py-2 text-xs rounded-lg bg-teal-500/20 border border-teal-500/40 text-teal-200 hover:bg-teal-500/30 disabled:opacity-40 transition-colors"
+            className="px-4 py-2 text-xs rounded-lg bg-law-bright/20 border border-law-bright/40 text-law-light hover:bg-law-bright/30 disabled:opacity-40 transition-colors"
           >
             {running ? "Measuring…" : mode === "single" ? "Measure" : "Measure both ways"}
           </button>
@@ -811,7 +811,7 @@ export function TokenProbsPanel() {
                 `comparison.mode` is what the server actually ran, so the caption
                 cannot drift from the measurement it sits above. */}
             <div>
-              <div className="text-[10px] uppercase tracking-wider text-teal-400 mb-1.5">
+              <div className="text-[10px] uppercase tracking-wider text-law-bright mb-1.5">
                 {comparison.mode === "models"
                   ? (comparison.model_a ?? "First model")
                   : labelA}
@@ -819,7 +819,7 @@ export function TokenProbsPanel() {
               <Bars distribution={comparison.on.distribution} deltas={comparison.deltas} />
             </div>
             <div>
-              <div className="text-[10px] uppercase tracking-wider text-sky-400 mb-1.5">
+              <div className="text-[10px] uppercase tracking-wider text-law-gold mb-1.5">
                 {comparison.mode === "models"
                   ? (comparison.model_b ?? "Second model")
                   : labelB}
@@ -831,7 +831,7 @@ export function TokenProbsPanel() {
 
         {single && (
           <div>
-            <div className="text-[10px] uppercase tracking-wider text-teal-400 mb-1.5">
+            <div className="text-[10px] uppercase tracking-wider text-law-bright mb-1.5">
               Distribution
             </div>
             <Bars distribution={single.distribution} />
@@ -841,7 +841,7 @@ export function TokenProbsPanel() {
         {result && (
           <>
             {lowCapture && (
-              <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-[11px] text-amber-200 leading-relaxed">
+              <div className="rounded-lg border border-law-gold/30 bg-law-gold/10 px-3 py-2 text-[11px] text-law-gold leading-relaxed">
                 These labels account for only {(result.captured_mass * 100).toFixed(1)}% of
                 the model&apos;s probability at this position; it largely wanted to say
                 something else. The percentages above are renormalised over the remainder
@@ -849,7 +849,7 @@ export function TokenProbsPanel() {
               </div>
             )}
             {result.collisions.length > 0 && (
-              <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-[11px] text-amber-200 leading-relaxed">
+              <div className="rounded-lg border border-law-gold/30 bg-law-gold/10 px-3 py-2 text-[11px] text-law-gold leading-relaxed">
                 {result.collisions.map((c) => c.join(" / ")).join("; ")} share a leading
                 token and cannot be distinguished from one position. Choose labels that
                 differ at the first character.

@@ -35,7 +35,7 @@ export function SimulatorPremise() {
           href="https://arxiv.org/abs/2606.29754"
           target="_blank"
           rel="noreferrer"
-          className="text-violet-400 hover:text-violet-300 underline underline-offset-2"
+          className="text-law-light hover:text-law-light underline underline-offset-2"
         >
           Probing the Stochastic Machine
         </a>{" "}
