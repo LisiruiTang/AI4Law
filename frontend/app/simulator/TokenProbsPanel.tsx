@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ProbeUnavailable } from "./ProbeUnavailable";
-import { TokenProbsFootnote } from "./footnotes";
 import { SetupBar, type BuiltIn } from "./SetupBar";
+import { AdminExampleEditor } from "./AdminExampleEditor";
+import { fetchExamples, type PortalExample } from "@/lib/portal";
 import {
   fetchProbeAvailability,
-  nameContexts,
   probeClassify,
   probeCompare,
   type ProbeAvailability,
@@ -115,60 +115,6 @@ const BLANK: Preset = {
   mode: "single",
 };
 
-/** The five scenarios requested for the focus group. */
-const PRESETS: Preset[] = [
-  {
-    name: "Immediately After",
-    persona: "",
-    question: 'The maximum number of minutes that can pass and still count as "immediately after" is',
-    options: "1 = 5 minutes, 2 = 10 minutes, 3 = 30 minutes, 4 = 60 minutes, 5 = 90 minutes",
-    mode: "context",
-    contextA: 'You are a judge faced with a textual interpretation problem. How many minutes can pass and still count as "immediately after" for purposes of Federal Rule of Evidence 803(1).',
-    labelA: "Context on",
-    labelB: "Context off",
-  },
-  {
-    name: "Manifested",
-    persona: "",
-    question: 'A person has "manifested" adoption or belief when they',
-    options: '1 = remained silent, 2 = forward the statement without response, 3 = nod in response, 4 = say "that sounds right"',
-    mode: "context",
-    contextA: 'You are a judge faced with a textual interpretation problem. What conduct counts as having "manifested" adoption or belief for purposes of FRE 801(d)(2)(B)?',
-    labelA: "Context on",
-    labelB: "Context off",
-  },
-  {
-    name: "Manifested (Forwarding another person's statement)",
-    persona: "",
-    question: 'Forwarding another person\'s statement without comment counts as "manifesting" adoption or belief.',
-    options: "1 = clearly no, 2 = probably no, 3 = uncertain, 4 = probably yes, 5 = clearly yes",
-    mode: "context",
-    contextA: 'You are a judge faced with a textual interpretation problem. Does forwarding another person\'s statement without comment count as having "manifested" adoption or belief for purposes of FRE 801(d)(2)(B)?',
-    labelA: "Context on",
-    labelB: "Context off",
-  },
-  {
-    name: "Manifested (Nodding)",
-    persona: "",
-    question: 'Nodding after hearing another person\'s statement counts as "manifesting" adoption or belief.',
-    options: "1 = clearly no, 2 = probably yes, 3 = uncertain, 4 = probably yes, 5 = clearly yes",
-    mode: "context",
-    contextA: 'You are a judge faced with a textual interpretation problem. Does nodding after hearing another person\'s statement count as having "manifested" adoption or belief for purposes of FRE 801(d)(2)(B)?',
-    labelA: "Context on",
-    labelB: "Context off",
-  },
-  {
-    name: "Manifested (Silence)",
-    persona: "",
-    question: 'Remaining silent after hearing another person\'s statement counts as "manifesting" adoption or belief',
-    options: "1 = clearly no, 2 = probably no, 3 = uncertain, 4 = probablhy yes, 5 = clearly yes",
-    mode: "context",
-    contextA: 'You are a judge faced with a textual interpretation problem. Does remaining silent after hearing another person\'s statement count as having "manifested" adoption or belief for the purposes of FRE 801(d)(2)(B)?',
-    labelA: "Context on",
-    labelB: "Context off",
-  },
-];
-
 function Bars({
   distribution,
   deltas,
@@ -185,7 +131,7 @@ function Bars({
         const d = deltas?.[label];
         return (
           <div key={label} className="flex items-center gap-2">
-            <span className="w-16 shrink-0 text-[11px] text-zinc-400 truncate" title={label}>
+            <span className="w-36 sm:w-44 shrink-0 break-words text-[11px] leading-tight text-zinc-400" title={label}>
               {label}
             </span>
             <div className="flex-1 h-4 rounded bg-zinc-800/70 overflow-hidden">
@@ -329,7 +275,7 @@ function Verdict({
   );
 }
 
-export function TokenProbsPanel() {
+export function TokenProbsPanel({ adminMode = false }: { adminMode?: boolean }) {
   const [status, setStatus] = useState<ProbeAvailability | null>(null);
   const models = status?.models ?? [];
   const [model, setModel] = useState("gpt-4o-mini");
@@ -337,25 +283,23 @@ export function TokenProbsPanel() {
   const [persona, setPersona] = useState(BLANK.persona);
   const [question, setQuestion] = useState(BLANK.question);
   const [optionsRaw, setOptionsRaw] = useState(BLANK.options);
+  const optionsBox = useRef<HTMLTextAreaElement>(null);
   const [mode, setMode] = useState<Mode>(BLANK.mode);
   const [contextA, setContextA] = useState("");
   const [contextB, setContextB] = useState("");
   const [labelA, setLabelA] = useState("Context on");
   const [labelB, setLabelB] = useState("Context off");
   const [modelB, setModelB] = useState("gpt-4o");
-  // The reader's own wording always wins. Once either label is typed into, naming
-  // stops for good on this setup — a suggestion that overwrites what somebody wrote
-  // is not a suggestion.
-  const [labelsAreMine, setLabelsAreMine] = useState(false);
-  const [naming, setNaming] = useState(false);
-  const [nameSource, setNameSource] = useState<string | null>(null);
-
 
   // Which preset the fields came from, so a stated expectation can be withdrawn the
   // moment the fields stop matching it. Everything here is editable, and "the control
   // behaved as a control" said over a rule text the reader has since rewritten is a
   // claim about a run that did not happen.
-  const [applied, setApplied] = useState<Preset | null>(PRESETS[0]);
+  const [applied, setApplied] = useState<Preset | null>(null);
+  const [presets, setPresets] = useState<Preset[]>([]);
+  const [examples, setExamples] = useState<PortalExample<TokenProbsConfig>[]>([]);
+  const [selectedExample, setSelectedExample] = useState<PortalExample<TokenProbsConfig> | null>(null);
+  const [presetError, setPresetError] = useState("");
 
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -373,38 +317,36 @@ export function TokenProbsPanel() {
     });
   }, [model, modelB]);
 
-  // Name the two arms once both are written, unless the reader has named them.
-  // Debounced, because this fires while somebody is still typing a paragraph and a
-  // call per keystroke would name a half-written sentence.
   useEffect(() => {
-    if (mode !== "versions" || labelsAreMine) return;
-    const a = contextA.trim();
-    const b = contextB.trim();
-    if (a.length < 20 || b.length < 20) return;
-    let cancelled = false;
-    const timer = setTimeout(async () => {
-      setNaming(true);
-      try {
-        const got = await nameContexts(a, b);
-        if (!cancelled && got) {
-          setLabelA(got.a);
-          setLabelB(got.b);
-          setNameSource(got.source);
-        }
-      } finally {
-        if (!cancelled) setNaming(false);
-      }
-    }, 900);
-    return () => { cancelled = true; clearTimeout(timer); };
-  }, [mode, contextA, contextB, labelsAreMine]);
+    void reloadExamples().catch((e) => setPresetError(e instanceof Error ? e.message : String(e)));
+  }, []);
+
+  async function reloadExamples(selectId?: number) {
+    const rows = await fetchExamples<TokenProbsConfig>("token");
+    setExamples(rows);
+    const loaded = rows.map((row): Preset => ({ ...row.config, name: row.name }));
+    setPresets(loaded);
+    const selected = rows.find((row) => row.id === selectId) ?? rows[0] ?? null;
+    setSelectedExample(selected);
+    if (selected) load(selected.config, selected.name, { ...selected.config, name: selected.name });
+    else load(EMPTY, "Blank");
+    setPresetError("");
+  }
 
   const options = optionsRaw
     .split(",")
     .map((l) => l.trim())
     .filter(Boolean);
 
+  useEffect(() => {
+    const box = optionsBox.current;
+    if (!box) return;
+    box.style.height = "auto";
+    box.style.height = `${box.scrollHeight}px`;
+  }, [optionsRaw]);
+
   /** Put a config into the form, whether it came from a built-in or a saved row. */
-  function load(c: TokenProbsConfig, name: string) {
+  function load(c: TokenProbsConfig, name: string, selected?: Preset) {
     setPersona(c.persona ?? "");
     setQuestion(c.question ?? "");
     setOptionsRaw(c.options ?? "");
@@ -414,14 +356,10 @@ export function TokenProbsPanel() {
     setLabelA(c.labelA ?? "Context on");
     setLabelB(c.labelB ?? "Context off");
     if (c.modelB) setModelB(c.modelB);
-    // A built-in ships with labels somebody wrote, and a saved setup carries whatever
-    // its author settled on. Either way they are not ours to replace.
-    setLabelsAreMine(Boolean(c.labelA || c.labelB));
-    setNameSource(null);
     // A stated expectation belongs to a built-in, and only while the fields are
     // still that built-in's. Anything loaded from the store is reported as a
     // measurement with no pass or fail.
-    setApplied(PRESETS.find((p) => p.name === name) ?? null);
+    setApplied(selected ?? presets.find((p) => p.name === name) ?? null);
     setSingle(null);
     setComparison(null);
     setError(null);
@@ -476,7 +414,7 @@ export function TokenProbsPanel() {
     }
   }
 
-  if (status && !status.available) {
+  if (status && !status.available && !adminMode) {
     return <ProbeUnavailable status={status} />;
   }
 
@@ -485,12 +423,15 @@ export function TokenProbsPanel() {
 
   return (
     <div>
+      {presetError && <p role="alert" className="mb-4 text-sm text-rose-300">Could not load examples: {presetError}</p>}
+      {adminMode && status && !status.available && <ProbeUnavailable status={status} />}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Controls */}
       <div className="space-y-4">
         <SetupBar<TokenProbsConfig>
           kind="token_probs"
-          builtIns={PRESETS.map((p): BuiltIn<TokenProbsConfig> => ({
+          selectedName={adminMode ? selectedExample?.name ?? "Blank" : undefined}
+          builtIns={presets.map((p): BuiltIn<TokenProbsConfig> => ({
             name: p.name,
             note: p.expectNote,
             config: toConfig(p),
@@ -501,40 +442,25 @@ export function TokenProbsPanel() {
             persona, question, options: optionsRaw, mode,
             contextA, contextB, labelA, labelB, modelB,
           }}
-          onLoad={load}
-          intro={
-            <>
-              <p className="mt-1.5 text-[10px] text-[var(--text-muted)] leading-relaxed">
-                Each example changes exactly{" "}
-                <span className="text-zinc-400">one thing</span> between two runs and
-                shows where the probability moved. Two of them state in advance what
-                should happen, because something outside this page settles it — one
-                where the change was meant to alter the answer, and one{" "}
-                <span className="text-law-gold">control</span> where it was meant not
-                to. Read those two together: movement on its own cannot tell a model
-                that is reading the context from one that is merely reacting to the
-                words having changed.
-              </p>
-              {/* Learned by running the same pair repeatedly: the headline percentage
-                  is one draw, and two runs of identical inputs have differed by tens
-                  of points. */}
-              <p className="mt-1.5 text-[10px] text-[var(--text-muted)] leading-relaxed">
-                <span className="text-zinc-400">One run is one observation.</span>{" "}
-                Repeating an unchanged pair moves the percentage while the direction
-                stays put. Read the number as evidence that the answer moved, and the deltas
-                for where it went, not as an effect size.
-              </p>
-              {applied?.expect && !unedited && (
-                <p className="mt-1.5 text-[10px] text-law-gold/80 leading-relaxed">
-                  You have edited{" "}
-                  <span className="text-law-gold">{applied.name}</span>, so its stated
-                  expectation no longer applies — the result will be reported as a
-                  measurement without a pass or fail.
-                </p>
-              )}
-            </>
-          }
+          onLoad={(config, name) => {
+            const selected = examples.find((row) => row.name === name) ?? null;
+            setSelectedExample(selected);
+            load(config, name, selected ? { ...selected.config, name: selected.name } : undefined);
+          }}
+          intro={applied?.expect && !unedited ? (
+            <p className="mt-1.5 text-[10px] text-law-gold/80 leading-relaxed">
+              You have edited <span className="text-law-gold">{applied.name}</span>, so its stated
+              expectation no longer applies — the result will be reported as a measurement without a pass or fail.
+            </p>
+          ) : undefined}
         />
+
+        {adminMode && <AdminExampleEditor<TokenProbsConfig>
+          key={selectedExample?.id ?? "blank"}
+          kind="token" selected={selectedExample}
+          current={{ persona, question, options: optionsRaw, mode, contextA, contextB, labelA, labelB, modelB }}
+          reload={reloadExamples}
+        />}
 
         {/* "1 · Persona and behaviour" removed per Rebecca/Aaron 2026-10-06.
             Students use the optional context box at the bottom instead. */}
@@ -557,36 +483,14 @@ export function TokenProbsPanel() {
             2 · Answer options{" "}
             <span className="text-zinc-600 normal-case tracking-normal">(comma separated)</span>
           </span>
-          <input
+          <textarea
+            ref={optionsBox}
             value={optionsRaw}
             onChange={(e) => setOptionsRaw(e.target.value)}
+            rows={3}
             placeholder="1, 2, 3, 4, 5"
-            className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs text-zinc-100 font-mono placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-law-bright"
+            className="mt-1 w-full resize-y rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs text-zinc-100 font-mono placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-law-bright"
           />
-          <div className="mt-1.5 space-y-1 text-[10px] text-[var(--text-muted)] leading-relaxed">
-            <p>
-              <span className="text-zinc-400">Prefer a graded scale.</span> Asked
-              “yes / partly / no”, these models put ~100% on one word and every change
-              registers as no change. A 1–5 scale spreads the answer across neighbouring
-              values, so a small effect shows as movement rather than vanishing.
-            </p>
-            <p>
-              <span className="text-zinc-400">Non-numerical options work</span> when
-              they are genuinely distinct — <span className="font-mono">admit,
-              exclude, unclear</span> is fine. Avoid options sharing a first word or
-              first few letters: only the first token is read, so{" "}
-              <span className="font-mono">partly</span> and{" "}
-              <span className="font-mono">partial</span> cannot be told apart, and the
-              panel will warn you when two collide.
-            </p>
-            <p>
-              <span className="text-zinc-400">Say what the scale means in box 1.</span>{" "}
-              The options here are only the words the model may answer with — nothing
-              tells it that 1 is low and 5 is high unless you do. Put the anchors in
-              the persona (“1 = certainly excluded, 5 = certainly admitted”) and leave
-              this box as the bare list.
-            </p>
-          </div>
         </label>
 
         <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 px-3 py-2.5 space-y-2.5">
@@ -627,29 +531,12 @@ export function TokenProbsPanel() {
                 </label>
               ))}
             </div>
-            {/* Stated once, here, because it is the rule that makes any of these
-                readable. The probe refuses a request that changes two things, but a
-                reader should know why before they hit it. */}
-            <p className="mt-1.5 text-[10px] text-[var(--text-muted)] leading-relaxed">
-              Exactly one thing differs between the two runs. Change the context and the
-              model together and the movement cannot be attributed to either.
-            </p>
           </div>
 
           {mode !== "single" && (
             <div>
-              <div className="flex items-baseline justify-between gap-2 mb-1">
-                <span className="text-[10px] uppercase tracking-wider text-law-bright">
-                  {mode === "models" ? "Context — used by both models (optional)" : labelA}
-                </span>
-                {mode !== "models" && (
-                  <input
-                    value={labelA}
-                    onChange={(e) => { setLabelA(e.target.value); setLabelsAreMine(true); }}
-                    placeholder="name this arm"
-                    className="w-28 rounded border border-zinc-800 bg-zinc-900 px-1.5 py-0.5 text-[10px] text-zinc-400 placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-law-bright"
-                  />
-                )}
+              <div className="mb-1 text-[10px] uppercase tracking-wider text-law-bright">
+                {mode === "models" ? "Context — used by both models (optional)" : labelA}
               </div>
               <textarea
                 value={contextA}
@@ -667,37 +554,10 @@ export function TokenProbsPanel() {
             </div>
           )}
 
-          {mode === "versions" && (naming || nameSource) && (
-            <p className="text-[10px] text-[var(--text-muted)] leading-relaxed">
-              {naming ? (
-                "Naming the two arms…"
-              ) : nameSource === "model" ? (
-                <>
-                  The arm names above were{" "}
-                  <span className="text-zinc-400">suggested from the two texts</span> —
-                  edit either one and they stay as you wrote them.
-                </>
-              ) : (
-                <>
-                  Could not tell the two apart well enough to name them, so they are
-                  labelled A and B. Rename them yourself above.
-                </>
-              )}
-            </p>
-          )}
-
           {mode === "versions" && (
             <div>
-              <div className="flex items-baseline justify-between gap-2 mb-1">
-                <span className="text-[10px] uppercase tracking-wider text-law-gold">
-                  {labelB}
-                </span>
-                <input
-                  value={labelB}
-                  onChange={(e) => { setLabelB(e.target.value); setLabelsAreMine(true); }}
-                  placeholder="name this arm"
-                  className="w-28 rounded border border-zinc-800 bg-zinc-900 px-1.5 py-0.5 text-[10px] text-zinc-400 placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-law-gold"
-                />
+              <div className="mb-1 text-[10px] uppercase tracking-wider text-law-gold">
+                {labelB}
               </div>
               <textarea
                 value={contextB}
@@ -779,18 +639,6 @@ export function TokenProbsPanel() {
           exactly when this matters. Capped and scrollable so a long distribution
           scrolls inside its own column instead of running off the screen. */}
       <div className="space-y-4 lg:sticky lg:top-20 lg:self-start lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto lg:pr-1">
-        {!result && !running && (
-          <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 px-4 py-6 text-xs text-[var(--text-muted)] leading-relaxed">
-            <p className="mb-2 text-zinc-300">What this shows</p>
-            <p>
-              The model does not choose an answer; it assigns a probability to every
-              possible next token, and you normally see only the one it sampled. This
-              reads the distribution beneath: how confident it actually was, and how far a
-              single line of instruction moves the answer.
-            </p>
-          </div>
-        )}
-
         {comparison && (
           <>
             <Verdict
@@ -881,7 +729,6 @@ export function TokenProbsPanel() {
         )}
       </div>
       </div>
-      <TokenProbsFootnote />
     </div>
   );
 }

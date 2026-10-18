@@ -7,61 +7,6 @@ import { Footnote, FnHeading, FnList, Mono } from "./Footnote";
  * about how the numbers are produced.
  */
 
-/**
- * The framing every tab shares: these are small experiments on a stochastic system,
- * not demonstrations of a tool.
- *
- * MOVED TO THE PAGE, 2026-10-02. It used to be rendered inside each of the four method
- * notes, which put page-level framing in four tab-level places — and its own text
- * cross-references every tab ("prompt sensitivity is what the on/off comparisons measure",
- * "variability is what the sampled decoding strategies expose"), so arriving at it under
- * the heading "How the five strategies are run" read as a claim about decoding.
- *
- * Exported bare as well as wrapped, so a future tab that genuinely needs it inline can
- * have it without duplicating the text.
- */
-export function SimulatorPremise() {
-  return (
-    <>
-      <FnHeading>Premise</FnHeading>
-      <p>
-        Each tab treats the model as{" "}
-        <span className="text-zinc-300">an object of study rather than an assistant</span>
-        : a system whose variability, bias and prompt sensitivity are established by
-        designing a small experiment and running it. That framing — and the case for
-        teaching it at every level, from &ldquo;ask it twice&rdquo; in an introductory
-        course to a stability audit of a full workflow — is set out in{" "}
-        <a
-          href="https://arxiv.org/abs/2606.29754"
-          target="_blank"
-          rel="noreferrer"
-          className="text-law-light hover:text-law-light underline underline-offset-2"
-        >
-          Probing the Stochastic Machine
-        </a>{" "}
-        (Tian Zheng), which reads these systems through Veridical Data Science and its
-        predictability, computability and stability principles.
-      </p>
-      <p>
-        <span className="text-zinc-300">Prompt sensitivity</span> is what the on/off and
-        rule-A/rule-B comparisons measure.{" "}
-        <span className="text-zinc-300">Variability</span> is what the sampled decoding
-        strategies expose, and what reading a distribution rather than a sample avoids.{" "}
-        <span className="text-zinc-300">Stability</span> is the question behind the
-        calibration gap and behind running one item across several models.
-      </p>
-    </>
-  );
-}
-
-/** The premise as its own note, for the page rather than a tab. Collapsed like the rest. */
-export function SimulatorPremiseFootnote() {
-  return (
-    <Footnote title="What these tabs are for">
-      <SimulatorPremise />
-    </Footnote>
-  );
-}
 
 export function TokenProbsFootnote() {
   return (
@@ -132,72 +77,6 @@ export function TokenProbsFootnote() {
         change moves 99% of it.
       </p>
 
-    </Footnote>
-  );
-}
-
-function OracleNote() {
-  return (
-    <>
-      <FnHeading>The model is only asked what comes next</FnHeading>
-      <p>
-        At each step the model is asked one question — given this text, what could come
-        next, and how likely is each — and answers with its twenty likeliest tokens and
-        their probabilities. Choosing among them happens here, in{" "}
-        <Mono>backend/probes/strategies.py</Mono>, about four lines per strategy.
-      </p>
-
-      <FnHeading>Three limits worth knowing</FnHeading>
-      <FnList>
-        <li>
-          <span className="text-zinc-300">Twenty candidates, not the whole vocabulary.</span>{" "}
-          Measured across a long walk they carry 96–100% of the probability, and each step
-          reports its own figure.
-        </li>
-        <li>
-          <span className="text-zinc-300">The model is told to continue the passage.</span>{" "}
-          So these are the probabilities of what comes next given the text{" "}
-          <em>and that instruction</em>, not of the text alone.
-        </li>
-        <li>
-          <span className="text-zinc-300">Spacing comes from the model.</span> A chat reply
-          begins at a message boundary, where the first token loses its leading space. To
-          avoid guessing it, the model is asked to resume from the passage&apos;s final
-          fragment, so the join sits inside its reply where the space is real. Tokens are
-          then appended exactly as returned. This needs the model to follow one instruction
-          precisely: <Mono>gpt-4o-mini</Mono> does on both providers, smaller open models do
-          not, and the page says so rather than showing text with the spaces misplaced.
-        </li>
-      </FnList>
-      <p>
-        Temperature is applied here too, to the numbers the model reported. The
-        probabilities a provider hands back are the{" "}
-        <span className="text-zinc-300">pre-temperature</span> ones, so a temperature sent to
-        the API changes the text it writes without changing any figure shown here.
-      </p>
-    </>
-  );
-}
-
-
-/** The branching tree. One strategy, so it does not carry the list of five.
- *
- * Titled away from "How these numbers are produced", which is the Token probabilities note
- * on the neighbouring tab. Two notes with near-identical titles on adjacent tabs is how a
- * reader comes to think they have already read one of them.
- */
-export function DecodingFootnote() {
-  return (
-    <Footnote title="How the tree is built">
-      <OracleNote />
-      <FnHeading>This view runs one strategy</FnHeading>
-      <p>
-        Beam search, which is not a per-step rule: it keeps several chains alive and scores
-        whole sequences, which is what the tree draws. Chains are ranked by their per-token
-        geometric mean so that chains of different lengths can be compared, with{" "}
-        <span className="text-zinc-300">Shortest chain</span> as the floor on how early a
-        winner may stop.
-      </p>
     </Footnote>
   );
 }

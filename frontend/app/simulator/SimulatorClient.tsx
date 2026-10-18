@@ -4,14 +4,13 @@ import Image from "next/image";
 import { useState } from "react";
 import { TokenProbsPanel } from "./TokenProbsPanel";
 import { BeamPanel } from "./BeamPanel";
-import { SimulatorPremiseFootnote } from "./footnotes";
+import { AccessGate } from "./AccessGate";
 
-export function SimulatorClient() {
+export function SimulatorClient({ adminMode = false, onAdminSignOut }: { adminMode?: boolean; onAdminSignOut?: () => Promise<void> }) {
   const [mode, setMode] = useState<"probs" | "beam">("probs");
   const tabs = [["probs", "Token probabilities"], ["beam", "Branching Tree"]] as const;
 
-  return (
-    <div className="mx-auto w-full max-w-screen-xl px-6 py-10">
+  const content = <div className="mx-auto w-full max-w-screen-xl px-6 py-10">
       <div className="mb-5 flex flex-wrap items-center gap-x-2 gap-y-3 sm:items-baseline">
         <Image
           src="/columbia-law-logo-inline-white.svg"
@@ -44,28 +43,21 @@ export function SimulatorClient() {
       </div>
 
       {mode === "beam" ? (
-        <>
-          <p className="mb-1 max-w-3xl text-sm text-[var(--text-muted)]">
-            How a model turns a probability distribution into words, and how much that choice changes what it writes.
-          </p>
-          <p className="mb-8 max-w-3xl text-xs text-[var(--text-muted)] opacity-70">
-            Keep the prompt fixed and compare low, medium, and high temperature directly in the Branching Tree. The displayed probabilities reflect the selected settings.
-          </p>
-          <BeamPanel />
-          <SimulatorPremiseFootnote />
-        </>
+        <BeamPanel adminMode={adminMode} />
       ) : (
         <>
-          <p className="mb-1 max-w-3xl text-sm text-[var(--text-muted)]">
-            Read the model&apos;s distribution over a set of answers, rather than the single word it happened to say.
-          </p>
-          <p className="mb-8 max-w-3xl text-xs text-[var(--text-muted)] opacity-70">
-            Add one line of instruction and watch the probability mass move.
-          </p>
-          <TokenProbsPanel />
-          <SimulatorPremiseFootnote />
+          <TokenProbsPanel adminMode={adminMode} />
         </>
       )}
+    </div>;
+
+  if (adminMode) return <>
+    <div className="mx-auto max-w-screen-xl px-6 pt-3 text-right text-xs text-[var(--text-muted)]">
+      Administrator · Changes are shared only after Save
+      <button onClick={() => void onAdminSignOut?.()} className="ml-4 underline hover:text-white">Sign out</button>
     </div>
-  );
+    {content}
+  </>;
+
+  return <AccessGate>{content}</AccessGate>;
 }
