@@ -31,7 +31,7 @@ import logging
 import math
 
 from probes.next_token import LOOKAHEAD, BridgeError, Walk
-from probes.strategies import captured_mass, entropy, temper
+from probes.strategies import captured_mass, entropy
 
 logger = logging.getLogger(__name__)
 
@@ -59,9 +59,7 @@ def _per_token(node: dict) -> float:
     return node["cum_logprob"] / max(node["step"], 1)
 
 
-async def _expand(
-    walk: Walk, k: int, *, first_call: bool, temperature: float, top_p: float
-) -> dict:
+async def _expand(walk: Walk, k: int, *, first_call: bool) -> dict:
     """Top-k candidate next tokens for one chain, with the step's summary statistics.
 
     `candidates` is empty when the model has nothing to add — a chain that has run to a
@@ -69,10 +67,8 @@ async def _expand(
     branch terminal rather than failing the whole search. Only the very first call treats
     it as fatal, because there it means the model cannot do this at all.
 
-    The provider returns raw log-probabilities. Temperature and top-p shape those values;
-    top-k then bounds the visible branches. The displayed probabilities are normalized
-    over the branches students actually see. Captured mass still describes the raw
-    provider distribution, so a truncated visible tail is not hidden.
+    Entropy and captured mass are computed over the FULL distribution, not the k that
+    survive, and returned from here so the caller never has to ask the walk twice.
     """
     empty = {"candidates": [], "entropy": 0.0, "captured": 0.0, "bridge_lost": False}
     try:
@@ -87,29 +83,9 @@ async def _expand(
     if not distribution:
         logger.info("Chain ended (no continuation) after %r", walk.text[-80:])
         return empty
-    shaped = temper(distribution, temperature)
-    nucleus: list[dict] = []
-    running = 0.0
-    for candidate in shaped:
-        nucleus.append(candidate)
-        running += candidate["prob"]
-        if running >= top_p:
-            break
-    candidates = nucleus[:k]
-    mass = sum(candidate["prob"] for candidate in candidates)
-    if mass:
-        candidates = [
-            {
-                **candidate,
-                "prob": candidate["prob"] / mass,
-                "logprob": math.log(candidate["prob"] / mass),
-                "rank": rank,
-            }
-            for rank, candidate in enumerate(candidates)
-        ]
     return {
-        "candidates": candidates,
-        "entropy": entropy(candidates),
+        "candidates": distribution[:k],
+        "entropy": entropy(distribution),
         "captured": captured_mass(distribution),
         "bridge_lost": False,
     }
@@ -120,8 +96,6 @@ async def beam_search(
     *,
     prompt: str,
     k: int = 3,
-    temperature: float = 1.0,
-    top_p: float = 0.9,
     depth: int = 6,
     beam_width: int = 10,
     min_length: int | None = None,
@@ -132,8 +106,6 @@ async def beam_search(
     if not prompt:
         raise ValueError("Give the model some text to continue.")
     k = max(2, min(int(k), MAX_K))
-    temperature = min(max(float(temperature), 0.01), 2.0)
-    top_p = min(max(float(top_p), 0.01), 1.0)
     depth = max(1, min(int(depth), MAX_DEPTH))
     beam_width = max(2, min(int(beam_width), MAX_BEAM))
     # The shortest chain allowed to win. A CONTROL rather than a constant, because the
@@ -200,10 +172,7 @@ async def beam_search(
         try:
             expansions = await asyncio.gather(
                 *(
-                    _expand(
-                        walks[n["id"]], k, first_call=(step == 1),
-                        temperature=temperature, top_p=top_p,
-                    )
+                    _expand(walks[n["id"]], k, first_call=(step == 1))
                     for n in frontier
                 )
             )
@@ -359,8 +328,6 @@ async def beam_search(
         "backend": backend,
         "prompt": prompt,
         "k": k,
-        "temperature": temperature,
-        "top_p": top_p,
         "depth": depth,
         "beam_width": beam_width,
         "min_length": floor,
