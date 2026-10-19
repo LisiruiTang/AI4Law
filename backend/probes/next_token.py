@@ -292,7 +292,7 @@ class Walk:
     mostly follow the argmax costs far less than its node count suggests.
     """
 
-    __slots__ = ("gateway", "text", "backend", "model", "lookahead", "_buffer", "calls")
+    __slots__ = ("gateway", "text", "backend", "model", "lookahead", "_buffer", "calls", "_cache")
 
     def __init__(
         self,
@@ -303,6 +303,7 @@ class Walk:
         model: str | None = None,
         lookahead: int = LOOKAHEAD,
         buffer: list[Step] | None = None,
+        cache: dict[str, list[Step]] | None = None,
     ):
         self.gateway = gateway
         self.text = text
@@ -311,9 +312,14 @@ class Walk:
         self.lookahead = lookahead
         self._buffer = buffer or []
         self.calls = 0
+        # Shared only within one variation comparison, never across users or prompts.
+        self._cache = cache
 
     async def distribution(self) -> list[dict]:
         """What could come next. Empty when the model has nothing to add."""
+        if self._cache is not None and self.text in self._cache:
+            self._buffer = self._cache[self.text]
+            return self._buffer[0].distribution if self._buffer else []
         if not self._buffer:
             # Counted before the await, not after. Incrementing on the way out undercounts
             # exactly the calls worth knowing about: a request that raised still cost a
@@ -327,6 +333,14 @@ class Walk:
                 model=self.model,
                 lookahead=self.lookahead,
             )
+        if self._cache is not None:
+            # Cache the whole lookahead, so another temperature reuses the same
+            # baseline at every shared prefix, even when it arrives via another path.
+            prefix = self.text
+            for index, step in enumerate(self._buffer):
+                self._cache.setdefault(prefix, self._buffer[index:])
+                prefix += step.token
+            self._buffer = self._cache.setdefault(self.text, self._buffer)
         return self._buffer[0].distribution if self._buffer else []
 
     def commit(self, token: str) -> None:
@@ -359,4 +373,5 @@ class Walk:
             model=self.model,
             lookahead=self.lookahead,
             buffer=inherited,
+            cache=self._cache,
         )
