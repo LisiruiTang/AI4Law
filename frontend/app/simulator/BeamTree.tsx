@@ -224,7 +224,7 @@ export function BeamTree({
               <title>
                 {[
                   JSON.stringify(n.token),
-                  `this step: ${(n.prob * 100).toFixed(2)}% (rank ${n.rank + 1})`,
+                  `this step after temperature and P/K filters: ${(n.prob * 100).toFixed(2)}% (rank ${n.rank + 1})`,
                   `chain so far: ${(n.cum_prob * 100).toFixed(4)}%`,
                   // How undecided the model was at the point this branch forked — shared by
                   // all siblings, since one distribution produced them. It is the figure that
@@ -233,10 +233,10 @@ export function BeamTree({
                   // Optional because a saved result from before 2026-10-02 has no entropy.
                   n.entropy === undefined
                     ? null
-                    : `model's uncertainty here: ${n.entropy.toFixed(2)} bits` +
+                    : `uncertainty after these settings: ${n.entropy.toFixed(2)} bits` +
                       (n.captured_mass === undefined
                         ? ""
-                        : ` (top 20 hold ${(n.captured_mass * 100).toFixed(1)}%)`),
+                        : ` (original returned candidates hold ${(n.captured_mass * 100).toFixed(1)}%)`),
                   n.pruned ? "\ndiscarded — outside the beam" : null,
                 ]
                   .filter(Boolean)
