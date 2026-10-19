@@ -297,17 +297,22 @@ def normalize_example(kind, name, note, config):
             raise HTTPException(422, "Enter a question and at least two answer options.")
     else:
         prompt = config.get("prompt", "")
+        k = config.get("k", 3)
         depth = config.get("depth", 6)
         width = config.get("beamWidth", 10)
         minimum = config.get("minLength", 2)
+        temperature = config.get("temperature", 1.0)
         if not isinstance(prompt, str) or not prompt.strip() or len(prompt) > 5000:
             raise HTTPException(422, "Enter a Branching Tree prompt of up to 5000 characters.")
-        if (not isinstance(depth, int) or isinstance(depth, bool) or not 2 <= depth <= 8
+        if (not isinstance(k, int) or isinstance(k, bool) or not 2 <= k <= 10
+                or not isinstance(depth, int) or isinstance(depth, bool) or not 2 <= depth <= 8
                 or not isinstance(width, int) or isinstance(width, bool) or not 1 <= width <= 30
                 or not isinstance(minimum, int) or isinstance(minimum, bool) or not 1 <= minimum <= depth):
             raise HTTPException(422, "Invalid tree settings.")
-        result = {"prompt": prompt, "k": 3, "depth": depth,
-                  "beamWidth": width, "minLength": minimum}
+        if isinstance(temperature, bool) or temperature not in (0.2, 1.0, 1.8):
+            raise HTTPException(422, "Choose Low, Medium, or High variation.")
+        result = {"prompt": prompt, "k": k, "depth": depth,
+                  "beamWidth": width, "minLength": minimum, "temperature": temperature}
     return kind, name, note, result
 
 

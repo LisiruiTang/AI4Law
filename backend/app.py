@@ -6,7 +6,7 @@ from fastapi import Depends, FastAPI, HTTPException, Request, Response
 from pydantic import BaseModel, Field
 
 from probes.token_probs import classify, compare
-from probes.beam_search import beam_search
+from probes.beam_search import beam_search, beam_variations
 import portal
 
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
@@ -189,6 +189,8 @@ class CompareBody(BaseModel):
 class BeamBody(BaseModel):
     prompt: str
     k: int = 3
+    temperature: float = Field(default=1.0, gt=0, le=2)
+    top_p: float = Field(default=0.9, gt=0, le=1)
     depth: int = 6
     beam_width: int = 10
     min_length: int = 2
@@ -249,9 +251,27 @@ async def beam_route(body: BeamBody, _session=Depends(portal.require_access)):
         raise HTTPException(503, "Branching Tree needs an OPENAI_API_KEY or OPENROUTER_API_KEY.")
     try:
         return await beam_search(gateway, prompt=body.prompt, k=body.k,
+                                 temperature=body.temperature, top_p=body.top_p,
                                  depth=body.depth, beam_width=body.beam_width,
                                  min_length=body.min_length, model=body.model or default_model(backend),
                                  backend=backend)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(502, str(exc)) from exc
+
+
+@app.post("/api/probes/beam/variations")
+async def beam_variations_route(body: BeamBody, _session=Depends(portal.require_access)):
+    backend = logprobs_backend()
+    if not backend:
+        raise HTTPException(503, "Branching Tree needs an OPENAI_API_KEY or OPENROUTER_API_KEY.")
+    try:
+        return await beam_variations(
+            gateway, prompt=body.prompt, k=body.k, depth=body.depth, beam_width=body.beam_width,
+            min_length=body.min_length, model=body.model or default_model(backend),
+            backend=backend,
+        )
     except ValueError as exc:
         raise HTTPException(400, str(exc)) from exc
     except Exception as exc:
